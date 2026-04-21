@@ -1,4 +1,5 @@
 import axios from 'axios'
+import CryptoJS from 'crypto-js'
 
 import apiConfig from '../../config/api.config'
 
@@ -19,9 +20,24 @@ function parseExpiry(rawExpiry: unknown): number {
   return Number.isFinite(expiry) && expiry > 0 ? expiry : 3600
 }
 
+function normalizeClientSecret(rawSecret: string): string {
+  const secret = rawSecret.trim()
+  if (!secret) return ''
+
+  // Backward compatibility: old deployments stored AES-obfuscated secret text.
+  if (secret.startsWith('U2FsdGVkX1')) {
+    const decrypted = CryptoJS.AES.decrypt(secret, 'onedrive-vercel-index').toString(CryptoJS.enc.Utf8).trim()
+    if (decrypted) {
+      return decrypted
+    }
+  }
+
+  return secret
+}
+
 function getOAuthClientCredentials() {
   const { clientId, redirectUri } = apiConfig
-  const clientSecret = process.env.OD_CLIENT_SECRET || ''
+  const clientSecret = normalizeClientSecret(process.env.OD_CLIENT_SECRET || '')
   if (!clientId || !clientSecret || !redirectUri) {
     throw new Error('OAuth credentials are not fully configured.')
   }

@@ -1,10 +1,12 @@
+import type { OdFileObject } from '../../types'
+
 import { useRouter } from 'next/router'
 import { getBaseUrl } from '../../utils/getBaseUrl'
 import { getStoredToken } from '../../utils/protectedRouteHandler'
 import DownloadButtonGroup from '../DownloadBtnGtoup'
 import { DownloadBtnContainer } from './Containers'
 
-const PDFEmbedPreview: React.FC<{ file: unknown }> = () => {
+const PDFEmbedPreview: React.FC<{ file: OdFileObject }> = () => {
   const { asPath } = useRouter()
   const hashedToken = getStoredToken(asPath)
 

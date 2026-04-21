@@ -1,3 +1,5 @@
+import type { OdFileObject } from '../../types'
+
 import { FC, useEffect, useRef, useState } from 'react'
 import { ReactReader } from 'react-reader'
 import { useRouter } from 'next/router'
@@ -8,7 +10,7 @@ import DownloadButtonGroup from '../DownloadBtnGtoup'
 import { DownloadBtnContainer } from './Containers'
 import { getStoredToken } from '../../utils/protectedRouteHandler'
 
-const EPUBPreview: FC<{ file: unknown }> = () => {
+const EPUBPreview: FC<{ file: OdFileObject }> = () => {
   const { asPath } = useRouter()
   const hashedToken = getStoredToken(asPath)
 

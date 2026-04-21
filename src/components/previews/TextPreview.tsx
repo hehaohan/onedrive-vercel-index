@@ -1,4 +1,5 @@
 import type { FC } from 'react'
+import type { OdFileObject } from '../../types'
 import { useRouter } from 'next/router'
 import { useTranslation } from 'next-i18next/pages'
 
@@ -8,7 +9,7 @@ import DownloadButtonGroup from '../DownloadBtnGtoup'
 import useFileContent from '../../utils/fetchOnMount'
 import { DownloadBtnContainer, PreviewContainer } from './Containers'
 
-const TextPreview: FC<{ file: unknown }> = () => {
+const TextPreview: FC<{ file: OdFileObject }> = () => {
   const { asPath } = useRouter()
   const { t } = useTranslation()
 

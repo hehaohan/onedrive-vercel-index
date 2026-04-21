@@ -22,17 +22,17 @@ const localeText = (locale: string): string => {
     case 'en':
       return 'English'
     case 'es':
-      return 'Espanol'
+      return 'Español'
     case 'zh-CN':
-      return 'Chinese (Simplified)'
+      return '简体中文'
     case 'hi':
-      return 'Hindi'
+      return 'हिन्दी'
     case 'id':
       return 'Indonesia'
     case 'tr-TR':
-      return 'Turkce'
+      return 'Türkçe'
     case 'zh-TW':
-      return 'Chinese (Traditional)'
+      return '繁體中文'
     default:
       return 'English'
   }

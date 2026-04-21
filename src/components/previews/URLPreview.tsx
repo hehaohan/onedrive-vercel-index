@@ -1,4 +1,5 @@
 import type { FC } from 'react'
+import type { OdFileObject } from '../../types'
 import { useRouter } from 'next/router'
 import { useTranslation } from 'next-i18next/pages'
 
@@ -15,7 +16,7 @@ const parseDotUrl = (content: string): string | undefined => {
     ?.split('=')[1]
 }
 
-const TextPreview: FC<{ file: unknown }> = () => {
+const TextPreview: FC<{ file: OdFileObject }> = () => {
   const { asPath } = useRouter()
   const { t } = useTranslation()
 

@@ -2,9 +2,9 @@ import { FC } from 'react'
 import { useTranslation } from 'next-i18next/pages'
 import useSystemTheme from 'react-use-system-theme'
 import { useRouter } from 'next/router'
+import dynamic from 'next/dynamic'
 
-import { LightAsync as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { tomorrowNightEighties, tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/hljs'
+import { tomorrowNightEighties, tomorrow } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 
 import useFileContent from '../../utils/fetchOnMount'
 import { getLanguageByFileName } from '../../utils/getPreviewType'
@@ -12,6 +12,10 @@ import FourOhFour from '../FourOhFour'
 import Loading from '../Loading'
 import DownloadButtonGroup from '../DownloadBtnGtoup'
 import { DownloadBtnContainer, PreviewContainer } from './Containers'
+
+const SyntaxHighlighter = dynamic(() => import('react-syntax-highlighter').then((mod) => mod.LightAsync), {
+  ssr: false,
+})
 
 const CodePreview: FC<{ file: any }> = ({ file }) => {
   const { asPath } = useRouter()

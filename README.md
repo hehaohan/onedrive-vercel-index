@@ -1,174 +1,132 @@
 <div align="center">
   <img src="./public/header.png" alt="onedrive-vercel-index" />
-  <h3><a href="https://drive.swo.moe">onedrive-vercel-index</a></h3>
-  <p><a href="https://ovi.swo.moe/docs/getting-started">Get started</a> · <a href="https://ovi.swo.moe/blog/whats-new">What's new?</a> · <a href="https://ovi.swo.moe/sponsor/ways">Sponsoring</a></p>
-  <p><em>OneDrive public directory listing, powered by Vercel and Next.js</em></p>
-
-  <img src="https://img.shields.io/badge/OneDrive-2C68C3?style=flat&logo=microsoft-onedrive&logoColor=white" alt="OneDrive" />
-  <img src="https://img.shields.io/badge/Next.js-black?style=flat&logo=next.js&logoColor=white" alt="Next.js" />
-  <img src="https://img.shields.io/badge/Vercel-black?style=flat&logo=Vercel&logoColor=white" alt="Vercel" />
-  <a href="https://ovi.swo.moe"><img src="https://img.shields.io/badge/Documentation-black?style=flat&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAABeUlEQVRIie2VwUrDQBCGZ5ZubNmS0Ba9tF6CUqTHpg+g+AhCn8R30DfpM3jRezdHoZJroaBJQ2qgsIEdD7YSsCtJVBTxP87u/t/u7M4swDcLTQNSSseyLFbERCmlPc9LCgF83z/jnE9s294vvk+AJEmesiwbe553awQEQbCXZVnY7/ebjBXa/Ju01jCbzVIA6AwGA7WN1/KT4jg+6vV6TcYYpGlKq9UKiQgAAOr1OnU6HWNKGWPQarWa8/n8GADudwIQ0UJ89QjDEKMoOiEitRm7tm37gnNuPAUiAiJa+VjNNJmIYDgcPiAiAQD4vh9tT1NG5RJdQT8PkFKak/5ZgJTyUgjxPJ1Ob4josArAeMmWZYHrulftdhvX6/X5YrEwPtFKgG63C7ApxEajga7rVvH/BZf8D/hjACJSVRpabj1su+9OgBAiiOM41VqXNtdaw3K5TIUQQT7+rjqllKec84njOAdlAEmSPCqlxqPR6O5DQA70JZ/+t+sFAb2R22dSZ7wAAAAASUVORK5CYII=" alt="Documentation" /></a>
-  <a href="https://github.com/spencerwooo/onedrive-vercel-index/discussions"><img src="https://img.shields.io/github/discussions/spencerwooo/onedrive-vercel-index?color=CF2B5B&labelColor=black&logo=github" alt="GitHub Discussions" /></a>
+  <h2>onedrive-vercel-index (Maintained Fork)</h2>
+  <p>OneDrive public directory listing powered by Vercel + Next.js</p>
+  <p>
+    <img src="https://img.shields.io/badge/Node-24.x-339933?style=flat&logo=node.js&logoColor=white" alt="Node 24" />
+    <img src="https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js&logoColor=white" alt="Next.js 16" />
+    <img src="https://img.shields.io/badge/React-19-149ECA?style=flat&logo=react&logoColor=white" alt="React 19" />
+    <img src="https://img.shields.io/badge/Security-Audited-brightgreen?style=flat" alt="Security Audited" />
+  </p>
 </div>
 
-## TL;DR
+## Overview
 
-Showcase, share, preview, and download files inside *your* OneDrive with onedrive-vercel-index -
+This repository is a maintained and security-hardened fork of
+[`spencerwooo/onedrive-vercel-index`](https://github.com/spencerwooo/onedrive-vercel-index),
+updated to run on modern Vercel infrastructure and current dependencies.
 
-- Completely free to host 💸
-- Super fast ⚡ and responsive 💦
-- Takes less than 15 minutes to setup ⏱️
-- Highly customisable ⚒️
+Use it to:
 
-🍌 More importantly, we are pretty (●'◡'●)
+- browse OneDrive files/folders with clean list/grid UI
+- preview common file formats (image, markdown, code, Office, PDF, EPUB, video, audio)
+- protect selected routes with password files
+- search, paginate, and share raw links
 
-## Quick start
+## Project Updates
 
-🚀 Quick start: [Getting started](https://ovi.swo.moe/docs/getting-started).
+### 2026-04-21 (Major maintenance round)
 
-## Maintenance update (2026-04-21)
+- Upgraded runtime and framework stack:
+  - Node.js `24.x`
+  - Next.js `16.2.x`
+  - React `19.x`
+  - refreshed TypeScript / ESLint / i18n toolchain
+- Migrated OAuth flow to server-side secret handling:
+  - `OD_CLIENT_SECRET` now server env only
+  - removed client-side reversible token obfuscation usage
+- Added compatibility for legacy encrypted `OD_CLIENT_SECRET` values (for old deployments)
+- Fixed SSR/runtime compatibility issues in preview components
+- Fixed i18n runtime integration for `next-i18next` with Next.js 16
+- Added explicit API input validation and method guards
 
-This repository was updated for modern Vercel/Next.js infrastructure and safer OAuth token handling.
+### 2026-04-21 (Security hardening round)
 
-- Runtime baseline: Node.js `24.x` (`.nvmrc` + `package.json#engines`)
-- Framework baseline: Next.js `16.2.x`, with refreshed React/i18n/tooling dependencies
-- OAuth hardening: removed reversible token obfuscation from client logic
-- Secret handling: `OD_CLIENT_SECRET` is now server-side only and must be set via environment variables
+- Added response security headers in `next.config.js`
+  - `X-Content-Type-Options`
+  - `X-Frame-Options`
+  - `Referrer-Policy`
+  - `Permissions-Policy`
+  - `Cross-Origin-Opener-Policy`
+  - `Strict-Transport-Security`
+- Hardened OAuth callback code extraction validation
+  - strict `origin + pathname` matching for redirect URL
+- Added write-path protections for token setup endpoint
+  - origin/referer trust checks
+  - content-type validation
+  - rate limiting
+- Added search endpoint rate limiting
+- Removed deprecated Tailwind line-clamp plugin usage/warning
+- Patched dependency vulnerabilities with lock + overrides:
+  - `@xmldom/xmldom` (high severity advisory fixed)
+  - `cookie` (low severity advisory fixed)
 
-### New required environment variables
+### Audit status (as of 2026-04-21)
 
-Check `.env.example` for a complete template:
+- `pnpm audit --prod`: **0 vulnerabilities**
+- `pnpm audit`: **0 vulnerabilities**
+- `pnpm lint`: pass
+- `pnpm typecheck`: pass
+- `pnpm build`: pass
 
-- `OD_CLIENT_ID`
-- `OD_CLIENT_SECRET`
-- `OD_REDIRECT_URI` (default `http://localhost`)
-- `REDIS_URL`
-- `KV_PREFIX` (optional)
-- `NEXT_PUBLIC_USER_PRINCIPLE_NAME` (optional public value)
+## Quick Start (Vercel)
 
-### Migration notes for existing deployments
+1. Fork this repository to your GitHub account.
+2. Import the fork into Vercel.
+3. Configure environment variables.
+4. Deploy and complete the built-in OAuth bootstrap page (`/onedrive-vercel-index-oauth/step-1/`).
 
-1. Remove any previous `obfuscatedClientSecret` usage from deployment settings/config.
-2. Configure `OD_CLIENT_ID`, `OD_CLIENT_SECRET`, and `OD_REDIRECT_URI` in Vercel.
-3. Reinstall dependencies with pnpm 10 (`pnpm install`) to refresh the lockfile for new dependency versions.
+### Required environment variables
 
-## Discussion
+See `.env.example` for template.
 
-Please go to our [discussion forum](https://github.com/spencerwooo/onedrive-vercel-index/discussions) for general questions and FAQs, **issues are for bug reports and bug reports only.** Feature requests may or may not be ignored, as [I (@spencerwooo)](https://spencerwoo.com) am the only one maintaining the project, so **I only prioritise features that I use.**
+```env
+OD_CLIENT_ID=
+OD_CLIENT_SECRET=
+OD_REDIRECT_URI=http://localhost
+REDIS_URL=
+KV_PREFIX=
+NEXT_PUBLIC_USER_PRINCIPLE_NAME=
+```
 
-*If you happen to like this project, please give it a star!* :3
+Notes:
 
-*If you really, really like this project, please send money! -> [Sponsors 🤑 and donations 💰](https://ovi.swo.moe/sponsor/ways)*
+- `OD_CLIENT_SECRET` must be the **secret value** from Azure App Registration, not the secret ID.
+- `KV_PREFIX` is optional but recommended when sharing one Redis for multiple deployments.
+- `NEXT_PUBLIC_USER_PRINCIPLE_NAME` should match the owner account used for initialization.
 
-## Demo
+## Local Development
 
-Live demo at [Spencer's OneDrive](https://drive.swo.moe).
+```bash
+pnpm install
+pnpm dev
+```
 
-![demo](./public/demo.png)
+Quality checks:
 
-## Features
+```bash
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm audit --prod
+```
 
-<table>
-  <tbody>
-    <tr>
-      <td>
-        <a
-          href="https://drive.swo.moe/Lecture%20and%20Coursework%20CS%20(BIT)/2019%20-%20%E5%A4%A7%E4%B8%89%E4%B8%8B%20-%20%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86%E4%B8%8E%E8%AE%BE%E8%AE%A1/n1570.pdf"
-          >👀 File preview</a
-        >
-      </td>
-      <td>
-        <a
-          href="https://drive.swo.moe/%F0%9F%8D%87%20Wallpaper"
-          >💠  List / Grid layouts</a
-        >
-      </td>
-      <td>
-        <a
-          href="https://drive.swo.moe/%F0%9F%8D%A1%20Genshin%20PV/New%20version%20PV/TGA2021%E3%80%8A%E5%8E%9F%E7%A5%9E%E3%80%8B%E5%8F%82%E9%80%89%E8%A7%86%E9%A2%91.mp4"
-          >🎥 Video and audio</a
-        >
-      </td>
-    </tr>
-    <tr>
-      <td>PDF, EPUB, markdown, code, plain text</td>
-      <td>For previewing images and documents with thumbnails</td>
-      <td>mp4, mp3, ..., play online or with IINA, PotPlayer ... with subtitles!</td>
-    </tr>
-    <tr>
-      <td>
-        <a
-          href="https://drive.swo.moe/Lecture%20and%20Coursework%20CS%20(BIT)/2017%20-%20%E5%A4%A7%E4%BA%8C%E4%B8%8A%20-%20%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/1%20%E7%BB%AA%E8%AE%BA.pptx"
-          >📄 Office preview</a
-        >
-      </td>
-      <td><a href="https://drive.swo.moe/%F0%9F%A5%9F%20Some%20test%20files/Articles">📝 README.md preview</a></td>
-      <td><a href="https://drive.swo.moe/%F0%9F%A5%9F%20Some%20test%20files/Imagenette">📑 Pagination</a></td>
-    </tr>
-    <tr>
-      <td>docx, pptx, xlsx, ...</td>
-      <td>Also renders code blocks, images with relative links, ...</td>
-      <td>For folders with 200 or more items</td>
-    </tr>
-    <tr>
-      <td><a href="https://drive.swo.moe/%F0%9F%8C%9E%20Private%20folder">🔒 Protected folders</a></td>
-      <td><a href="https://drive.swo.moe/%F0%9F%8D%8A%20Weibo%20emotes/Source2">⏬ Multi-file download</a></td>
-      <td>🔎 Native Search</td>
-    </tr>
-    <tr>
-      <td>Password protected routes and files. <a href="https://ovi.swo.moe/docs/features/protected-folders">Details here</a></td>
-      <td>
-        Compress and download multiple files or folders.
-        <a href="https://ovi.swo.moe/docs/features/multi-file-folder-download">Details here</a>
-      </td>
-      <td>
-        Searching through your shared OneDrive files (with some caveats 🥺).
-        <a href="https://ovi.swo.moe/docs/features/search-for-files-and-folders">Details here</a>
-      </td>
-    </tr>
-  </tbody>
-</table>
+## Migration Notes (from old deployments)
 
-... and more:
+1. Remove old hardcoded/obfuscated client secret settings.
+2. Set `OD_CLIENT_ID`, `OD_CLIENT_SECRET`, `OD_REDIRECT_URI` in Vercel.
+3. Redeploy.
+4. Re-run OAuth bootstrap if tokens are missing/expired.
 
-- Streamlined deployment, without having to get your tokens manually anymore!
-- Direct raw-file serving and hosting ...
-- Full dark mode support, style and website customisations ...
+## Credits
 
-> **Note**: This project is focused on showcasing and providing a way for others to download files from your OneDrive. Emphasis on **free** and **serverless**. If you have your own server / need WebDAV / use cloud providers other than OneDrive, checkout [alist](https://github.com/alist-org/alist).
-
-## Documentation
-
-Documentation is hosted at [ovi.swo.moe](https://ovi.swo.moe/).
-
-- [How can I get started and deploy?](https://ovi.swo.moe/docs/getting-started)
-- [How can I configure ... ?](https://ovi.swo.moe/docs/custom-configs)
-- Where is feature ... ?
-  - [Docs - Password protected folders](https://ovi.swo.moe/docs/features/protected-folders)
-  - [Docs - Multi-file and folder download](https://ovi.swo.moe/docs/features/multi-file-folder-download)
-  - [Docs - Hosting files (images) directly](https://ovi.swo.moe/docs/features/hosting-images-directly)
-  - [Docs - Search for files and folders](https://ovi.swo.moe/docs/features/search-for-files-and-folders)
-  - [Docs - Load video subtitles](https://ovi.swo.moe/docs/features/load-video-subtitles)
-- [I deployed this before, how can I upgrade to the latest version?](https://ovi.swo.moe/docs/migration/updating-to-latest-version)
-- [I was here before 2022, how can I migrate to the new version?](https://ovi.swo.moe/docs/migration/if-you-deployed-before-2022)
-- [I got a problem during deployment ...](https://ovi.swo.moe/docs/faqs/error-on-deployment)
-- I didn't find a solution / My problem is unique? [Find help in discussion forum](https://github.com/spencerwooo/onedrive-vercel-index/discussions).
-
-## Server-*less* (free)?
-
-Yes! Completely free with no backend server what-so-ever. (Well, we use Redis, but that's free to some extent also.)
-
-## Sponsors and donations
-
-Open-source is hard! If you happen to like this project and want me to keep going, please consider sponsoring me or providing a single donation! Thanks for all the love and support!
-
-[🧸 Please donate - 微信/支付宝](https://ovi.swo.moe/sponsor/ways) · [Patreon](https://www.patreon.com/spencerwoo) · [爱发电](https://afdian.net/@spencerwoo)
+- Upstream project: [`spencerwooo/onedrive-vercel-index`](https://github.com/spencerwooo/onedrive-vercel-index)
+- Original author: [Spencer Woo](https://spencerwoo.com)
 
 ## License
 
 [MIT](LICENSE)
 
 <div align="center">
-  <img src="./public/footer.png" />
-  <em>made with ❤️ by <a href="https://spencerwoo.com">spencer woo</a></em>
+  <img src="./public/footer.png" alt="footer" />
 </div>

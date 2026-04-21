@@ -2,9 +2,16 @@ import axios from 'axios'
 
 import apiConfig from '../../config/api.config'
 
+type OAuthUrlOverrides = {
+  clientId?: string
+  redirectUri?: string
+}
+
 // Generate the Microsoft OAuth 2.0 authorization URL, used for requesting the authorisation code
-export function generateAuthorisationUrl(): string {
-  const { clientId, redirectUri, authApi, scope } = apiConfig
+export function generateAuthorisationUrl(overrides: OAuthUrlOverrides = {}): string {
+  const { authApi, scope } = apiConfig
+  const clientId = overrides.clientId ?? apiConfig.clientId
+  const redirectUri = overrides.redirectUri ?? apiConfig.redirectUri
   const authUrl = authApi.replace('/token', '/authorize')
 
   // Construct URL parameters for OAuth2

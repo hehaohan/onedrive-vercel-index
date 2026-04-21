@@ -8,12 +8,19 @@ import { serverSideTranslations } from 'next-i18next/pages/serverSideTranslation
 import nextI18nextConfig from '../../../next-i18next.config'
 
 import siteConfig from '../../../config/site.config'
+import apiConfig from '../../../config/api.config'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { LoadingIcon } from '../../components/Loading'
 import { extractAuthCodeFromRedirected, generateAuthorisationUrl } from '../../utils/oAuthHandler'
 
-export default function OAuthStep2() {
+export default function OAuthStep2({
+  oAuthClientId,
+  oAuthRedirectUri,
+}: {
+  oAuthClientId: string
+  oAuthRedirectUri: string
+}) {
   const router = useRouter()
 
   const [oAuthRedirectedUrl, setOAuthRedirectedUrl] = useState('')
@@ -22,7 +29,7 @@ export default function OAuthStep2() {
 
   const { t } = useTranslation()
 
-  const oAuthUrl = generateAuthorisationUrl()
+  const oAuthUrl = generateAuthorisationUrl({ clientId: oAuthClientId, redirectUri: oAuthRedirectUri })
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-gray-900">
@@ -142,6 +149,8 @@ export default function OAuthStep2() {
 export async function getServerSideProps({ locale }) {
   return {
     props: {
+      oAuthClientId: apiConfig.clientId,
+      oAuthRedirectUri: apiConfig.redirectUri,
       ...(await serverSideTranslations(locale, ['common'], nextI18nextConfig as any)),
     },
   }

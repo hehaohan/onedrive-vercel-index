@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useTranslation, Trans } from 'next-i18next/pages'
 import { serverSideTranslations } from 'next-i18next/pages/serverSideTranslations'
+import nextI18nextConfig from '../../../next-i18next.config'
 
 import siteConfig from '../../../config/site.config'
 import Navbar from '../../components/Navbar'
@@ -233,7 +234,7 @@ export async function getServerSideProps({ query, locale }) {
       props: {
         error: 'No auth code present',
         description: 'Where is the auth code? Did you follow step 2 you silly donut?',
-        ...(await serverSideTranslations(locale, ['common'])),
+        ...(await serverSideTranslations(locale, ['common'], nextI18nextConfig as any)),
       },
     }
   }
@@ -247,7 +248,7 @@ export async function getServerSideProps({ query, locale }) {
         error: response.error,
         description: response.errorDescription,
         errorUri: response.errorUri,
-        ...(await serverSideTranslations(locale, ['common'])),
+        ...(await serverSideTranslations(locale, ['common'], nextI18nextConfig as any)),
       },
     }
   }
@@ -260,7 +261,7 @@ export async function getServerSideProps({ query, locale }) {
       expiryTime,
       accessToken,
       refreshToken,
-      ...(await serverSideTranslations(locale, ['common'])),
+      ...(await serverSideTranslations(locale, ['common'], nextI18nextConfig as any)),
     },
   }
 }

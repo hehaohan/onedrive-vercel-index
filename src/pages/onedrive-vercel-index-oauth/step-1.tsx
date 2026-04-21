@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useTranslation, Trans } from 'next-i18next/pages'
 import { serverSideTranslations } from 'next-i18next/pages/serverSideTranslations'
+import nextI18nextConfig from '../../../next-i18next.config'
 
 import siteConfig from '../../../config/site.config'
 import apiConfig from '../../../config/api.config'
@@ -152,7 +153,7 @@ export async function getServerSideProps({ locale }) {
   return {
     props: {
       clientSecretConfigured: Boolean(process.env.OD_CLIENT_SECRET),
-      ...(await serverSideTranslations(locale, ['common'])),
+      ...(await serverSideTranslations(locale, ['common'], nextI18nextConfig as any)),
     },
   }
 }

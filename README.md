@@ -26,6 +26,32 @@ Showcase, share, preview, and download files inside *your* OneDrive with onedriv
 
 🚀 Quick start: [Getting started](https://ovi.swo.moe/docs/getting-started).
 
+## Maintenance update (2026-04-21)
+
+This repository was updated for modern Vercel/Next.js infrastructure and safer OAuth token handling.
+
+- Runtime baseline: Node.js `24.x` (`.nvmrc` + `package.json#engines`)
+- Framework baseline: Next.js `16.2.x`, with refreshed React/i18n/tooling dependencies
+- OAuth hardening: removed reversible token obfuscation from client logic
+- Secret handling: `OD_CLIENT_SECRET` is now server-side only and must be set via environment variables
+
+### New required environment variables
+
+Check `.env.example` for a complete template:
+
+- `OD_CLIENT_ID`
+- `OD_CLIENT_SECRET`
+- `OD_REDIRECT_URI` (default `http://localhost`)
+- `REDIS_URL`
+- `KV_PREFIX` (optional)
+- `NEXT_PUBLIC_USER_PRINCIPLE_NAME` (optional public value)
+
+### Migration notes for existing deployments
+
+1. Remove any previous `obfuscatedClientSecret` usage from deployment settings/config.
+2. Configure `OD_CLIENT_ID`, `OD_CLIENT_SECRET`, and `OD_REDIRECT_URI` in Vercel.
+3. Reinstall dependencies with pnpm 10 (`pnpm install`) to refresh the lockfile for new dependency versions.
+
 ## Discussion
 
 Please go to our [discussion forum](https://github.com/spencerwooo/onedrive-vercel-index/discussions) for general questions and FAQs, **issues are for bug reports and bug reports only.** Feature requests may or may not be ignored, as [I (@spencerwooo)](https://spencerwoo.com) am the only one maintaining the project, so **I only prioritise features that I use.**

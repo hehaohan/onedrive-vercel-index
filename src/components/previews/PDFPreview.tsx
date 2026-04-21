@@ -4,7 +4,7 @@ import { getStoredToken } from '../../utils/protectedRouteHandler'
 import DownloadButtonGroup from '../DownloadBtnGtoup'
 import { DownloadBtnContainer } from './Containers'
 
-const PDFEmbedPreview: React.FC<{ file: any }> = ({ file }) => {
+const PDFEmbedPreview: React.FC<{ file: unknown }> = () => {
   const { asPath } = useRouter()
   const hashedToken = getStoredToken(asPath)
 

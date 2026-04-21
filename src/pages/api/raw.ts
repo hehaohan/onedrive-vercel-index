@@ -1,11 +1,17 @@
 import { posix as pathPosix } from 'path'
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import axios, { AxiosResponseHeaders } from 'axios'
+import axios from 'axios'
 import Cors from 'cors'
 
 import { driveApi, cacheControlHeader } from '../../../config/api.config'
 import { encodePath, getAccessToken, checkAuthRoute } from '.'
+
+function parseBooleanQuery(value: string | string[] | boolean): boolean {
+  if (Array.isArray(value)) return false
+  if (typeof value === 'boolean') return value
+  return value === '1' || value?.toLowerCase() === 'true'
+}
 
 // CORS middleware for raw links: https://nextjs.org/docs/api-routes/api-middlewares
 export function runCorsMiddleware(req: NextApiRequest, res: NextApiResponse) {
@@ -22,6 +28,12 @@ export function runCorsMiddleware(req: NextApiRequest, res: NextApiResponse) {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET')
+    res.status(405).json({ error: 'Method not allowed.' })
+    return
+  }
+
   const accessToken = await getAccessToken()
   if (!accessToken) {
     res.status(403).json({ error: 'No access token.' })
@@ -29,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { path = '/', odpt = '', proxy = false } = req.query
+  const proxyEnabled = parseBooleanQuery(proxy)
 
   // Sometimes the path parameter is defaulted to '[...path]' which we need to handle
   if (path === '[...path]') {
@@ -43,7 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const cleanPath = pathPosix.resolve('/', pathPosix.normalize(path))
 
   // Handle protected routes authentication
-  const odTokenHeader = (req.headers['od-protected-token'] as string) ?? odpt
+  const odTokenHeaderFromHeader = typeof req.headers['od-protected-token'] === 'string' ? req.headers['od-protected-token'] : ''
+  const odTokenHeaderFromQuery = typeof odpt === 'string' ? odpt : ''
+  const odTokenHeader = odTokenHeaderFromHeader || odTokenHeaderFromQuery
 
   const { code, message } = await checkAuthRoute(cleanPath, accessToken, odTokenHeader)
   // Status code other than 200 means user has not authenticated yet
@@ -71,13 +86,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if ('@microsoft.graph.downloadUrl' in data) {
       // Only proxy raw file content response for files up to 4MB
-      if (proxy && 'size' in data && data['size'] < 4194304) {
+      if (proxyEnabled && 'size' in data && data['size'] < 4194304) {
         const { headers, data: stream } = await axios.get(data['@microsoft.graph.downloadUrl'] as string, {
           responseType: 'stream',
         })
-        headers['Cache-Control'] = cacheControlHeader
+        const passthroughHeaders = [
+          'content-type',
+          'content-length',
+          'content-disposition',
+          'accept-ranges',
+          'content-range',
+          'etag',
+          'last-modified',
+        ]
+        for (const header of passthroughHeaders) {
+          const value = headers[header]
+          if (value) {
+            res.setHeader(header, String(value))
+          }
+        }
+        res.setHeader('Cache-Control', cacheControlHeader)
         // Send data stream as response
-        res.writeHead(200, headers as AxiosResponseHeaders)
+        res.status(200)
         stream.pipe(res)
       } else {
         res.redirect(data['@microsoft.graph.downloadUrl'])

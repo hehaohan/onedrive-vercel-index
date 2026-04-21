@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, type ReactElement } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Menu, Transition } from '@headlessui/react'
 
@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useCookies, withCookies } from 'react-cookie'
 
 // https://headlessui.dev/react/menu#integrating-with-next-js
-const CustomLink = ({ href, children, as, locale, ...props }): JSX.Element => {
+const CustomLink = ({ href, children, as, locale, ...props }): ReactElement => {
   return (
     <Link href={href} as={as} locale={locale} {...props}>
       {children}
@@ -18,30 +18,30 @@ const CustomLink = ({ href, children, as, locale, ...props }): JSX.Element => {
 const localeText = (locale: string): string => {
   switch (locale) {
     case 'de-DE':
-      return '🇩🇪 Deutsch'
+      return 'Deutsch'
     case 'en':
-      return '🇬🇧 English'
+      return 'English'
     case 'es':
-      return '🇪🇸 Español'
+      return 'Espanol'
     case 'zh-CN':
-      return '🇨🇳 简体中文'
+      return 'Chinese (Simplified)'
     case 'hi':
-      return '🇮🇳 हिन्दी'
+      return 'Hindi'
     case 'id':
-      return '🇮🇩 Indonesia'
+      return 'Indonesia'
     case 'tr-TR':
-      return '🇹🇷 Türkçe'
+      return 'Turkce'
     case 'zh-TW':
-      return '🇹🇼 繁體中文'
+      return 'Chinese (Traditional)'
     default:
-      return '🇬🇧 English'
+      return 'English'
   }
 }
 
 const SwitchLang = () => {
   const { locales, pathname, query, asPath } = useRouter()
 
-  const [_, setCookie] = useCookies(['NEXT_LOCALE'])
+  const [, setCookie] = useCookies(['NEXT_LOCALE'])
 
   return (
     <div className="relative">

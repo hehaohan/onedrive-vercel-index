@@ -1,5 +1,6 @@
+import type { FC } from 'react'
 import { useRouter } from 'next/router'
-import { useTranslation } from 'next-i18next'
+import { useTranslation } from 'next-i18next/pages'
 
 import FourOhFour from '../FourOhFour'
 import Loading from '../Loading'
@@ -14,7 +15,7 @@ const parseDotUrl = (content: string): string | undefined => {
     ?.split('=')[1]
 }
 
-const TextPreview = ({ file }) => {
+const TextPreview: FC<{ file: unknown }> = () => {
   const { asPath } = useRouter()
   const { t } = useTranslation()
 
@@ -55,7 +56,7 @@ const TextPreview = ({ file }) => {
             btnColor="blue"
             btnText={t('Open URL')}
             btnIcon="external-link-alt"
-            btnTitle={t('Open URL{{url}}', { url: ' ' + parseDotUrl(content) ?? '' })}
+            btnTitle={t('Open URL{{url}}', { url: ' ' + (parseDotUrl(content) ?? '') })}
           />
         </div>
       </DownloadBtnContainer>

@@ -1,8 +1,8 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import { useTranslation, Trans } from 'next-i18next'
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation, Trans } from 'next-i18next/pages'
+import { serverSideTranslations } from 'next-i18next/pages/serverSideTranslations'
 
 import siteConfig from '../../../config/site.config'
 import apiConfig from '../../../config/api.config'
@@ -10,7 +10,7 @@ import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-export default function OAuthStep1() {
+export default function OAuthStep1({ clientSecretConfigured }: { clientSecretConfigured: boolean }) {
   const router = useRouter()
 
   const { t } = useTranslation()
@@ -81,7 +81,7 @@ export default function OAuthStep1() {
                       CLIENT_SECRET*
                     </td>
                     <td className="whitespace-nowrap py-1 px-3 text-gray-500 dark:text-gray-400">
-                      <code className="font-mono text-sm">{apiConfig.obfuscatedClientSecret}</code>
+                      <code className="font-mono text-sm">{clientSecretConfigured ? 'configured' : 'missing'}</code>
                     </td>
                   </tr>
                   <tr className="border-y bg-white dark:border-gray-700 dark:bg-gray-900">
@@ -124,7 +124,8 @@ export default function OAuthStep1() {
               <Trans>
                 <FontAwesomeIcon icon="exclamation-triangle" className="mr-1 text-yellow-400" /> If you see anything
                 missing or incorrect, you need to reconfigure{' '}
-                <code className="font-mono text-xs">/config/api.config.js</code> and redeploy this instance.
+                <code className="font-mono text-xs">OD_CLIENT_ID / OD_CLIENT_SECRET / OD_REDIRECT_URI</code> and
+                redeploy this instance.
               </Trans>
             </p>
 
@@ -150,6 +151,7 @@ export default function OAuthStep1() {
 export async function getServerSideProps({ locale }) {
   return {
     props: {
+      clientSecretConfigured: Boolean(process.env.OD_CLIENT_SECRET),
       ...(await serverSideTranslations(locale, ['common'])),
     },
   }

@@ -5,13 +5,26 @@ import axios from 'axios'
 
 import apiConfig from '../../../config/api.config'
 import siteConfig from '../../../config/site.config'
-import { revealObfuscatedToken } from '../../utils/oAuthHandler'
+import { requestTokenWithRefreshToken } from '../../utils/oAuthServer'
 import { compareHashedToken } from '../../utils/protectedRouteHandler'
 import { getOdAuthTokens, storeOdAuthTokens } from '../../utils/odAuthTokenStore'
 import { runCorsMiddleware } from './raw'
 
 const basePath = pathPosix.resolve('/', siteConfig.baseDirectory)
-const clientSecret = revealObfuscatedToken(apiConfig.obfuscatedClientSecret)
+const sortableFields = new Set([
+  'name asc',
+  'name desc',
+  'size asc',
+  'size desc',
+  'lastModifiedDateTime asc',
+  'lastModifiedDateTime desc',
+])
+
+function parseBooleanQuery(value: string | string[] | boolean): boolean {
+  if (Array.isArray(value)) return false
+  if (typeof value === 'boolean') return value
+  return value === '1' || value?.toLowerCase() === 'true'
+}
 
 /**
  * Encode the path of the file relative to the base directory
@@ -48,29 +61,20 @@ export async function getAccessToken(): Promise<string> {
     return ''
   }
 
-  // Fetch new access token with in storage refresh token
-  const body = new URLSearchParams()
-  body.append('client_id', apiConfig.clientId)
-  body.append('redirect_uri', apiConfig.redirectUri)
-  body.append('client_secret', clientSecret)
-  body.append('refresh_token', refreshToken)
-  body.append('grant_type', 'refresh_token')
+  const refreshedToken = await requestTokenWithRefreshToken(refreshToken)
+  if ('error' in refreshedToken) {
+    console.error('Failed to refresh access token:', refreshedToken.error, refreshedToken.errorDescription)
+    return ''
+  }
 
-  const resp = await axios.post(apiConfig.authApi, body, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  })
-
-  if ('access_token' in resp.data && 'refresh_token' in resp.data) {
-    const { expires_in, access_token, refresh_token } = resp.data
+  if (refreshedToken.accessToken && refreshedToken.refreshToken) {
     await storeOdAuthTokens({
-      accessToken: access_token,
-      accessTokenExpiry: parseInt(expires_in),
-      refreshToken: refresh_token,
+      accessToken: refreshedToken.accessToken,
+      accessTokenExpiry: refreshedToken.expiryTime,
+      refreshToken: refreshedToken.refreshToken,
     })
     console.log('Fetch new access token with stored refresh token.')
-    return access_token
+    return refreshedToken.accessToken
   }
 
   return ''
@@ -157,24 +161,37 @@ export async function checkAuthRoute(
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    res.setHeader('Allow', 'GET, POST')
+    res.status(405).json({ error: 'Method not allowed.' })
+    return
+  }
+
   // If method is POST, then the API is called by the client to store acquired tokens
   if (req.method === 'POST') {
-    const { obfuscatedAccessToken, accessTokenExpiry, obfuscatedRefreshToken } = req.body
-    const accessToken = revealObfuscatedToken(obfuscatedAccessToken)
-    const refreshToken = revealObfuscatedToken(obfuscatedRefreshToken)
+    const { accessToken, accessTokenExpiry, refreshToken } = req.body ?? {}
 
-    if (typeof accessToken !== 'string' || typeof refreshToken !== 'string') {
-      res.status(400).send('Invalid request body')
+    if (
+      typeof accessToken !== 'string' ||
+      accessToken === '' ||
+      typeof refreshToken !== 'string' ||
+      refreshToken === '' ||
+      typeof accessTokenExpiry !== 'number' ||
+      !Number.isFinite(accessTokenExpiry) ||
+      accessTokenExpiry <= 0
+    ) {
+      res.status(400).json({ error: 'Invalid request body.' })
       return
     }
 
     await storeOdAuthTokens({ accessToken, accessTokenExpiry, refreshToken })
-    res.status(200).send('OK')
+    res.status(200).json({ ok: true })
     return
   }
 
   // If method is GET, then the API is a normal request to the OneDrive API for files or folders
   const { path = '/', raw = false, next = '', sort = '' } = req.query
+  const isRawRequest = parseBooleanQuery(raw)
 
   // Set edge function caching for faster load times, check docs:
   // https://vercel.com/docs/concepts/functions/edge-caching
@@ -198,6 +215,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(400).json({ error: 'Sort query invalid.' })
     return
   }
+  if (sort !== '' && !sortableFields.has(sort)) {
+    res.status(400).json({ error: 'Sort query unsupported.' })
+    return
+  }
+  if (typeof next !== 'string') {
+    res.status(400).json({ error: 'Pagination query invalid.' })
+    return
+  }
 
   const accessToken = await getAccessToken()
 
@@ -208,7 +233,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Handle protected routes authentication
-  const { code, message } = await checkAuthRoute(cleanPath, accessToken, req.headers['od-protected-token'] as string)
+  const odTokenHeader = typeof req.headers['od-protected-token'] === 'string' ? req.headers['od-protected-token'] : ''
+  const { code, message } = await checkAuthRoute(cleanPath, accessToken, odTokenHeader)
   // Status code other than 200 means user has not authenticated yet
   if (code !== 200) {
     res.status(code).json({ error: message })
@@ -228,7 +254,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Go for file raw download link, add CORS headers, and redirect to @microsoft.graph.downloadUrl
   // (kept here for backwards compatibility, and cache headers will be reverted to no-cache)
-  if (raw) {
+  if (isRawRequest) {
     await runCorsMiddleware(req, res)
     res.setHeader('Cache-Control', 'no-cache')
 
@@ -271,9 +297,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
 
       // Extract next page token from full @odata.nextLink
-      const nextPage = folderData['@odata.nextLink']
-        ? folderData['@odata.nextLink'].match(/&\$skiptoken=(.+)/i)[1]
-        : null
+      const nextPageMatch =
+        typeof folderData['@odata.nextLink'] === 'string'
+          ? folderData['@odata.nextLink'].match(/&\$skiptoken=(.+)/i)
+          : null
+      const nextPage = nextPageMatch ? nextPageMatch[1] : null
 
       // Return paging token if specified
       if (nextPage) {
@@ -286,7 +314,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({ file: identityData })
     return
   } catch (error: any) {
-    res.status(error?.response?.code ?? 500).json({ error: error?.response?.data ?? 'Internal server error.' })
+    res.status(error?.response?.status ?? 500).json({ error: error?.response?.data ?? 'Internal server error.' })
     return
   }
 }

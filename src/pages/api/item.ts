@@ -5,8 +5,18 @@ import { getAccessToken } from '.'
 import apiConfig from '../../../config/api.config'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET')
+    res.status(405).json({ error: 'Method not allowed.' })
+    return
+  }
+
   // Get access token from storage
   const accessToken = await getAccessToken()
+  if (!accessToken) {
+    res.status(403).json({ error: 'No access token.' })
+    return
+  }
 
   // Get item details (specifically, its path) by its unique ID in OneDrive
   const { id = '' } = req.query

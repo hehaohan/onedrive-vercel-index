@@ -3,8 +3,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useTranslation, Trans } from 'next-i18next'
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation, Trans } from 'next-i18next/pages'
+import { serverSideTranslations } from 'next-i18next/pages/serverSideTranslations'
 
 import siteConfig from '../../../config/site.config'
 import Navbar from '../../components/Navbar'
@@ -43,16 +43,14 @@ export default function OAuthStep2() {
                 priority
               />
             </div>
-            <h3 className="mb-4 text-center text-xl font-medium">
-              {t('Welcome to your new onedrive-vercel-index 🎉')}
-            </h3>
+            <h3 className="mb-4 text-center text-xl font-medium">{t('Welcome to your new onedrive-vercel-index')}</h3>
 
             <h3 className="mt-4 mb-2 text-lg font-medium">{t('Step 2/3: Get authorisation code')}</h3>
 
             <p className="py-1 text-sm font-medium text-red-400">
               <Trans>
-                <FontAwesomeIcon icon="exclamation-circle" className="mr-1" /> If you are not the owner of this website,
-                stop now, as continuing with this process may expose your personal files in OneDrive.
+                <FontAwesomeIcon icon="exclamation-circle" className="mr-1" /> If you are not the owner of this
+                website, stop now, as continuing with this process may expose your personal files in OneDrive.
               </Trans>
             </p>
 
@@ -73,11 +71,10 @@ export default function OAuthStep2() {
             <p className="py-1">
               <Trans>
                 The OAuth link for getting the authorisation code has been created. Click on the link above to get the{' '}
-                <b className="underline decoration-yellow-400 decoration-wavy">authorisation code</b>. Your browser will
-                {/* eslint-disable-next-line react/no-unescaped-entities */}
-                open a new tab to Microsoft's account login page. After logging in and authenticating with your
-                Microsoft account, you will be redirected to a blank page on localhost. Paste{' '}
-                <b className="underline decoration-teal-500 decoration-wavy">the entire redirected URL</b> down below.
+                <b className="underline decoration-yellow-400 decoration-wavy">authorisation code</b>. Your browser
+                will open a new tab to Microsoft account login. After logging in, you will be redirected to a blank
+                page on localhost. Paste <b className="underline decoration-teal-500 decoration-wavy">the entire
+                redirected URL</b> below.
               </Trans>
             </p>
 
@@ -108,8 +105,8 @@ export default function OAuthStep2() {
 
             <p>
               {authCode
-                ? t('✅ You can now proceed onto the next step: requesting your access token and refresh token.')
-                : t('❌ No valid code extracted.')}
+                ? t('You can now proceed to the next step: requesting access and refresh tokens.')
+                : t('No valid code extracted.')}
             </p>
 
             <div className="mb-2 mt-6 text-right">

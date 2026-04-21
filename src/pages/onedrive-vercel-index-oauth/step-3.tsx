@@ -3,14 +3,14 @@ import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useTranslation, Trans } from 'next-i18next'
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation, Trans } from 'next-i18next/pages'
+import { serverSideTranslations } from 'next-i18next/pages/serverSideTranslations'
 
 import siteConfig from '../../../config/site.config'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 
-import { getAuthPersonInfo, requestTokenWithAuthCode, sendTokenToServer } from '../../utils/oAuthHandler'
+import { getAuthPersonInfo, sendTokenToServer } from '../../utils/oAuthHandler'
 import { LoadingIcon } from '../../components/Loading'
 
 export default function OAuthStep3({ accessToken, expiryTime, refreshToken, error, description, errorUri }) {
@@ -77,7 +77,7 @@ export default function OAuthStep3({ accessToken, expiryTime, refreshToken, erro
           router.push('/')
         }, 2000)
       })
-      .catch(_ => {
+      .catch(() => {
         setButtonError(true)
         setButtonContent(
           <div>
@@ -225,9 +225,10 @@ export default function OAuthStep3({ accessToken, expiryTime, refreshToken, erro
 
 export async function getServerSideProps({ query, locale }) {
   const { authCode } = query
+  const { requestTokenWithAuthCode } = await import('../../utils/oAuthServer')
 
   // Return if no auth code is present
-  if (!authCode) {
+  if (!authCode || typeof authCode !== 'string') {
     return {
       props: {
         error: 'No auth code present',

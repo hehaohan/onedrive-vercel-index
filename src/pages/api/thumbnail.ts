@@ -9,6 +9,12 @@ import { checkAuthRoute, encodePath, getAccessToken } from '.'
 import apiConfig from '../../../config/api.config'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET')
+    res.status(405).json({ error: 'Method not allowed.' })
+    return
+  }
+
   const accessToken = await getAccessToken()
   if (!accessToken) {
     res.status(403).json({ error: 'No access token.' })
@@ -17,13 +23,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Get item thumbnails by its path since we will later check if it is protected
   const { path = '', size = 'medium', odpt = '' } = req.query
+  const odTokenFromQuery = typeof odpt === 'string' ? odpt : ''
 
   // Set edge function caching for faster load times, if route is not protected, check docs:
   // https://vercel.com/docs/concepts/functions/edge-caching
-  if (odpt === '') res.setHeader('Cache-Control', apiConfig.cacheControlHeader)
+  if (odTokenFromQuery === '') res.setHeader('Cache-Control', apiConfig.cacheControlHeader)
 
   // Check whether the size is valid - must be one of 'large', 'medium', or 'small'
-  if (size !== 'large' && size !== 'medium' && size !== 'small') {
+  if (typeof size !== 'string' || (size !== 'large' && size !== 'medium' && size !== 'small')) {
     res.status(400).json({ error: 'Invalid size' })
     return
   }
@@ -39,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   const cleanPath = pathPosix.resolve('/', pathPosix.normalize(path))
 
-  const { code, message } = await checkAuthRoute(cleanPath, accessToken, odpt as string)
+  const { code, message } = await checkAuthRoute(cleanPath, accessToken, odTokenFromQuery)
   // Status code other than 200 means user has not authenticated yet
   if (code !== 200) {
     res.status(code).json({ error: message })
@@ -69,7 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(400).json({ error: "The item doesn't have a valid thumbnail." })
     }
   } catch (error: any) {
-    res.status(error?.response?.status).json({ error: error?.response?.data ?? 'Internal server error.' })
+    res.status(error?.response?.status ?? 500).json({ error: error?.response?.data ?? 'Internal server error.' })
   }
   return
 }

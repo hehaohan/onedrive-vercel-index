@@ -18,16 +18,26 @@ import siteConfig from '../../../config/site.config'
 function sanitiseQuery(query: string): string {
   const sanitisedQuery = query
     .replace(/'/g, "''")
-    .replace('<', ' &lt; ')
-    .replace('>', ' &gt; ')
-    .replace('?', ' ')
-    .replace('/', ' ')
+    .replace(/</g, ' &lt; ')
+    .replace(/>/g, ' &gt; ')
+    .replace(/\?/g, ' ')
+    .replace(/\//g, ' ')
   return encodeURIComponent(sanitisedQuery)
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET')
+    res.status(405).json({ error: 'Method not allowed.' })
+    return
+  }
+
   // Get access token from storage
   const accessToken = await getAccessToken()
+  if (!accessToken) {
+    res.status(403).json({ error: 'No access token.' })
+    return
+  }
 
   // Query parameter from request
   const { q: searchQuery = '' } = req.query

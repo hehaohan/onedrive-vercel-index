@@ -83,7 +83,6 @@ See `.env.example` for template.
 ```env
 OD_CLIENT_ID=
 OD_CLIENT_SECRET=
-OD_REDIRECT_URI=http://localhost
 REDIS_URL=
 KV_PREFIX=
 NEXT_PUBLIC_USER_PRINCIPLE_NAME=
@@ -92,6 +91,7 @@ NEXT_PUBLIC_USER_PRINCIPLE_NAME=
 Notes:
 
 - `OD_CLIENT_SECRET` must be the **secret value** from Azure App Registration, not the secret ID.
+- OAuth redirect URI is fixed in code as `http://localhost`.
 - `KV_PREFIX` is optional but recommended when sharing one Redis for multiple deployments.
 - `NEXT_PUBLIC_USER_PRINCIPLE_NAME` should match the owner account used for initialization.
 
@@ -114,7 +114,7 @@ pnpm audit --prod
 ## Migration Notes (from old deployments)
 
 1. Remove old hardcoded/obfuscated client secret settings.
-2. Set `OD_CLIENT_ID`, `OD_CLIENT_SECRET`, `OD_REDIRECT_URI` in Vercel.
+2. Set `OD_CLIENT_ID` and `OD_CLIENT_SECRET` in Vercel.
 3. Redeploy.
 4. Re-run OAuth bootstrap if tokens are missing/expired.
 

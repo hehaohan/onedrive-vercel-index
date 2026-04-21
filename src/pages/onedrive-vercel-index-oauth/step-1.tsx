@@ -125,7 +125,7 @@ export default function OAuthStep1({ clientSecretConfigured }: { clientSecretCon
               <Trans>
                 <FontAwesomeIcon icon="exclamation-triangle" className="mr-1 text-yellow-400" /> If you see anything
                 missing or incorrect, you need to reconfigure{' '}
-                <code className="font-mono text-xs">OD_CLIENT_ID / OD_CLIENT_SECRET / OD_REDIRECT_URI</code> and
+                <code className="font-mono text-xs">OD_CLIENT_ID / OD_CLIENT_SECRET</code> and
                 redeploy this instance.
               </Trans>
             </p>

@@ -6,7 +6,7 @@ import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
 import { useTranslation } from 'next-i18next/pages'
 import dynamic from 'next/dynamic'
-import { tomorrowNight } from 'react-syntax-highlighter/dist/esm/styles/hljs'
+import { tomorrowNight } from 'react-syntax-highlighter/dist/cjs/styles/hljs'
 
 import 'katex/dist/katex.min.css'
 

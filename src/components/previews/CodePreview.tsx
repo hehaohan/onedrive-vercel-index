@@ -4,7 +4,7 @@ import useSystemTheme from 'react-use-system-theme'
 import { useRouter } from 'next/router'
 import dynamic from 'next/dynamic'
 
-import { tomorrowNightEighties, tomorrow } from 'react-syntax-highlighter/dist/esm/styles/hljs'
+import { tomorrowNightEighties, tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/hljs'
 
 import useFileContent from '../../utils/fetchOnMount'
 import { getLanguageByFileName } from '../../utils/getPreviewType'

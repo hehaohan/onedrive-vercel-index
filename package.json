@@ -22,7 +22,6 @@
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.3.1",
     "@headlessui/react": "^2.2.10",
-    "@tailwindcss/line-clamp": "^0.4.4",
     "@vercel/analytics": "^2.0.1",
     "awesome-debounce-promise": "^2.1.0",
     "axios": "^1.15.1",
@@ -81,6 +80,12 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^3.4.19",
     "typescript": "6.0.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@xmldom/xmldom": "^0.8.12",
+      "cookie": "^0.7.2"
+    }
   },
   "prettier": {
     "printWidth": 120,

@@ -4,6 +4,8 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { encodePath, getAccessToken } from '.'
 import apiConfig from '../../../config/api.config'
 import siteConfig from '../../../config/site.config'
+import { enforceRateLimit } from '../../utils/rateLimit'
+import { getRequestIp } from '../../utils/requestSecurity'
 
 /**
  * Sanitize the search query
@@ -29,6 +31,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET')
     res.status(405).json({ error: 'Method not allowed.' })
+    return
+  }
+
+  const requesterIp = getRequestIp(req)
+  const rateLimitKey = `${siteConfig.kvPrefix}rl:search:${requesterIp}`
+  const rateLimitResult = await enforceRateLimit(rateLimitKey, 90, 60)
+  res.setHeader('X-RateLimit-Limit', '90')
+  res.setHeader('X-RateLimit-Remaining', String(rateLimitResult.remaining))
+  if (!rateLimitResult.allowed) {
+    res.setHeader('Retry-After', String(rateLimitResult.retryAfter))
+    res.status(429).json({ error: 'Too many requests. Please retry later.' })
     return
   }
 

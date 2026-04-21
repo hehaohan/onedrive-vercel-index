@@ -6,7 +6,9 @@ import axios from 'axios'
 import apiConfig from '../../../config/api.config'
 import siteConfig from '../../../config/site.config'
 import { requestTokenWithRefreshToken } from '../../utils/oAuthServer'
+import { enforceRateLimit } from '../../utils/rateLimit'
 import { compareHashedToken } from '../../utils/protectedRouteHandler'
+import { getRequestIp, isTrustedWriteRequest } from '../../utils/requestSecurity'
 import { getOdAuthTokens, storeOdAuthTokens } from '../../utils/odAuthTokenStore'
 import { runCorsMiddleware } from './raw'
 
@@ -169,6 +171,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // If method is POST, then the API is called by the client to store acquired tokens
   if (req.method === 'POST') {
+    if (!isTrustedWriteRequest(req)) {
+      res.status(403).json({ error: 'Untrusted request origin.' })
+      return
+    }
+
+    const contentType = req.headers['content-type'] ?? ''
+    if (typeof contentType !== 'string' || !contentType.toLowerCase().includes('application/json')) {
+      res.status(415).json({ error: 'Unsupported content type.' })
+      return
+    }
+
+    const requesterIp = getRequestIp(req)
+    const rateLimitKey = `${siteConfig.kvPrefix}rl:token-post:${requesterIp}`
+    const rateLimitResult = await enforceRateLimit(rateLimitKey, 20, 60)
+    res.setHeader('X-RateLimit-Limit', '20')
+    res.setHeader('X-RateLimit-Remaining', String(rateLimitResult.remaining))
+    if (!rateLimitResult.allowed) {
+      res.setHeader('Retry-After', String(rateLimitResult.retryAfter))
+      res.status(429).json({ error: 'Too many setup attempts. Please retry later.' })
+      return
+    }
+
     const { accessToken, accessTokenExpiry, refreshToken } = req.body ?? {}
 
     if (

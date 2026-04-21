@@ -7,6 +7,18 @@ type OAuthUrlOverrides = {
   redirectUri?: string
 }
 
+function normalizeRedirectTarget(rawUrl: string): { origin: string; pathname: string } | null {
+  try {
+    const parsedUrl = new URL(rawUrl)
+    return {
+      origin: parsedUrl.origin,
+      pathname: parsedUrl.pathname.replace(/\/$/, '') || '/',
+    }
+  } catch {
+    return null
+  }
+}
+
 // Generate the Microsoft OAuth 2.0 authorization URL, used for requesting the authorisation code
 export function generateAuthorisationUrl(overrides: OAuthUrlOverrides = {}): string {
   const { authApi, scope } = apiConfig
@@ -28,8 +40,16 @@ export function generateAuthorisationUrl(overrides: OAuthUrlOverrides = {}): str
 // The code returned from the Microsoft OAuth 2.0 authorization URL is a request URL with hostname
 // http://localhost and URL parameter code. This function extracts the code from the request URL
 export function extractAuthCodeFromRedirected(url: string): string {
-  // Return empty string if the url is not the defined redirect uri
-  if (!url.startsWith(apiConfig.redirectUri)) {
+  const expectedRedirect = normalizeRedirectTarget(apiConfig.redirectUri)
+  const providedRedirect = normalizeRedirectTarget(url)
+
+  // Return empty string if the URL does not match the configured redirect target exactly.
+  if (
+    !expectedRedirect ||
+    !providedRedirect ||
+    expectedRedirect.origin !== providedRedirect.origin ||
+    expectedRedirect.pathname !== providedRedirect.pathname
+  ) {
     return ''
   }
 

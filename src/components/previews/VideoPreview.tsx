@@ -93,6 +93,7 @@ const VideoPreview: FC<{ file: OdFileObject }> = ({ file }) => {
 
   // We also format the raw video file for the in-browser player as well as all other players
   const videoUrl = `/api/raw/?path=${asPath}${hashedToken ? `&odpt=${hashedToken}` : ''}`
+  const videoDownloadUrl = `${videoUrl}&download=1`
 
   const isFlv = getExtension(file.name) === 'flv'
   const {
@@ -130,7 +131,7 @@ const VideoPreview: FC<{ file: OdFileObject }> = ({ file }) => {
       <DownloadBtnContainer>
         <div className="flex flex-wrap justify-center gap-2">
           <DownloadButton
-            onClickCallback={() => window.open(videoUrl)}
+            onClickCallback={() => window.open(videoDownloadUrl)}
             btnColor="blue"
             btnText={t('Download')}
             btnIcon="file-download"

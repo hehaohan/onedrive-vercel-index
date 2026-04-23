@@ -13,6 +13,28 @@ function parseBooleanQuery(value: string | string[] | boolean): boolean {
   return value === '1' || value?.toLowerCase() === 'true'
 }
 
+function encodeRFC5987ValueChars(value: string): string {
+  return encodeURIComponent(value).replace(/[\x27()*]/g, c => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
+}
+
+function buildDownloadContentDisposition(fileName: string): string {
+  const asciiFileName = fileName.replace(/[^\x20-\x7E]/g, '_').replace(/["\\]/g, '_') || 'download'
+  return `attachment; filename="${asciiFileName}"; filename*=UTF-8''${encodeRFC5987ValueChars(fileName)}`
+}
+
+function getFileName(cleanPath: string, graphName: unknown): string {
+  if (typeof graphName === 'string' && graphName.trim() !== '') {
+    return graphName
+  }
+
+  const fallback = pathPosix.basename(cleanPath)
+  if (fallback && fallback !== '/') {
+    return fallback
+  }
+
+  return 'download'
+}
+
 // CORS middleware for raw links: https://nextjs.org/docs/api-routes/api-middlewares
 export function runCorsMiddleware(req: NextApiRequest, res: NextApiResponse) {
   const cors = Cors({ methods: ['GET', 'HEAD'] })
@@ -40,8 +62,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return
   }
 
-  const { path = '/', odpt = '', proxy = false } = req.query
+  const { path = '/', odpt = '', proxy = false, download = false } = req.query
   const proxyEnabled = parseBooleanQuery(proxy)
+  const downloadRequested = parseBooleanQuery(download)
 
   // Sometimes the path parameter is defaulted to '[...path]' which we need to handle
   if (path === '[...path]') {
@@ -80,15 +103,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       headers: { Authorization: `Bearer ${accessToken}` },
       params: {
         // OneDrive international version fails when only selecting the downloadUrl (what a stupid bug)
-        select: 'id,size,@microsoft.graph.downloadUrl',
+        select: 'id,name,size,@microsoft.graph.downloadUrl',
       },
     })
 
     if ('@microsoft.graph.downloadUrl' in data) {
-      // Only proxy raw file content response for files up to 4MB
-      if (proxyEnabled && 'size' in data && data['size'] < 4194304) {
-        const { headers, data: stream } = await axios.get(data['@microsoft.graph.downloadUrl'] as string, {
+      const isSmallFile = 'size' in data && typeof data.size === 'number' && data.size < 4194304
+      const shouldProxy = isSmallFile && (proxyEnabled || downloadRequested)
+
+      // Only proxy raw file content response for files up to 4MB.
+      // Larger download requests still fall back to the direct OneDrive URL to avoid serverless timeouts.
+      if (shouldProxy) {
+        const upstreamHeaders: Record<string, string> = {}
+        if (typeof req.headers.range === 'string' && req.headers.range !== '') {
+          upstreamHeaders.Range = req.headers.range
+        }
+
+        const { status, headers, data: stream } = await axios.get(data['@microsoft.graph.downloadUrl'] as string, {
           responseType: 'stream',
+          headers: upstreamHeaders,
         })
         const passthroughHeaders = [
           'content-type',
@@ -105,9 +138,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.setHeader(header, String(value))
           }
         }
-        res.setHeader('Cache-Control', cacheControlHeader)
-        // Send data stream as response
-        res.status(200)
+        if (downloadRequested) {
+          const fileName = getFileName(cleanPath, data.name)
+          res.setHeader('Content-Disposition', buildDownloadContentDisposition(fileName))
+          res.setHeader('Cache-Control', 'no-cache')
+        } else {
+          res.setHeader('Cache-Control', cacheControlHeader)
+        }
+        res.status(status)
         stream.pipe(res)
       } else {
         res.redirect(data['@microsoft.graph.downloadUrl'])

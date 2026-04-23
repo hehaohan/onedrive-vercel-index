@@ -247,7 +247,7 @@ const FileListing: FC<{ query?: ParsedUrlQuery }> = ({ query }) => {
         const el = document.createElement('a')
         el.style.display = 'none'
         document.body.appendChild(el)
-        el.href = files[0].url
+        el.href = `${files[0].url}&download=1`
         el.click()
         el.remove()
       } else if (files.length > 1) {
